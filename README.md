@@ -16,9 +16,9 @@ fpopse depvar treatvars [if] [aw], control(varlist) rho(#)
 ### Return values
 
 - `e(V_conv)`: conventional (heteroskedasticity-robust) variance matrix
-- `e(eta)`: Outer product of treatment variables (residualized by the controls)
+- `e(gamma)`: Outer product of treatment variables (residualized by the controls)
 - `e(delta_ehw)`: $\delta_{ehw}$ in the paper (multiplied by the sample size)
-- `e(delta_cond)`: $\delta_{cond}$ in the paper (multiplied by the sample size)
+- `e(delta_z)`: $\delta_{z}$ in the paper (multiplied by the sample size)
 
 ## After estimation...
 

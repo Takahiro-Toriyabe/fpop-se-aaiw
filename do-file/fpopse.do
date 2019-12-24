@@ -15,7 +15,7 @@ program define fpopse, eclass
 	local `treatvars' = subinstr("`varlist'", "``y'' ", "", 1)
 	
 	// Residualize treatment variables
-	tempname treatvars_resid eta
+	tempname treatvars_resid gamma
 	local `treatvars_resid' ""
 	foreach var of varlist ``treatvars'' {
 		tempvar `var'_resid
@@ -23,7 +23,7 @@ program define fpopse, eclass
 		qui predict ``var'_resid' if e(sample), residual
 		local `treatvars_resid' ``treatvars_resid'' ``var'_resid'
 	}
-	qui matrix accum `eta' = ``treatvars_resid'' if `touse', nocons
+	qui matrix accum `gamma' = ``treatvars_resid'' if `touse', nocons
 
 	// Estimate delta_ehw
 	tempname b V N df_r delta_ehw_vars delta_ehw
@@ -43,21 +43,21 @@ program define fpopse, eclass
 	}
 	qui matrix accum `delta_ehw' = ``delta_ehw_vars'' if e(sample), nocons
 	
-	// Estimation of delta_cond
-	tempname delta_cond_vars delta_cond
-	local `delta_cond_vars' ""
+	// Estimation of delta_z
+	tempname delta_z_vars delta_z
+	local `delta_z_vars' ""
 	foreach var of varlist ``delta_ehw_vars'' {
 		tempvar `var'_resid
 		qui reg `var' `control' [`weight'`exp'] if `touse'
 		qui predict ``var'_resid' if e(sample), residual
-		local `delta_cond_vars' ``delta_cond_vars'' ``var'_resid'
+		local `delta_z_vars' ``delta_z_vars'' ``var'_resid'
 	}
-	qui matrix accum `delta_cond' = ``delta_cond_vars'' if e(sample), nocons
+	qui matrix accum `delta_z' = ``delta_z_vars'' if e(sample), nocons
 
 	// Calculate upper bound of the variance
 	tempname var_ehw var_ub
-	matrix `var_ehw' = inv(`eta') * `delta_ehw' * inv(`eta')
-	matrix `var_ub' = inv(`eta') * (`rho' * `delta_cond' + (1-`rho') * `delta_ehw') * inv(`eta')
+	matrix `var_ehw' = inv(`gamma') * `delta_ehw' * inv(`gamma')
+	matrix `var_ub' = inv(`gamma') * (`rho' * `delta_z' + (1-`rho') * `delta_ehw') * inv(`gamma')
 
 	// Return estimation results
 	tempname n_treatvars b_return V_return V_conv N_return df_r_return
@@ -75,7 +75,7 @@ program define fpopse, eclass
 	ereturn post `b_return' `V_return', depname("``y''") obs(``N_return'') ///
 		dof(``df_r_return'') esample(`touse')
 	
-	foreach mat in eta delta_ehw delta_cond V_conv {
+	foreach mat in gamma delta_ehw delta_z V_conv {
 		ereturn matrix `mat' = ``mat''
 	}
 	ereturn scalar rho = `rho'
@@ -90,12 +90,12 @@ program define fpopse_recalc, rclass
 	// Check the value of rho
 	_fpopse_check_rho, rho(`rho')
 	
-	tempname eta delta_ehw delta_cond V
-	foreach mat in eta delta_ehw delta_cond {
+	tempname gamma delta_ehw delta_z V
+	foreach mat in gamma delta_ehw delta_z {
 		matrix ``mat'' = e(`mat')
 	}
 
-	matrix `V' = inv(`eta') * (`rho' * `delta_cond' + (1-`rho') * `delta_ehw') * inv(`eta')
+	matrix `V' = inv(`gamma') * (`rho' * `delta_z' + (1-`rho') * `delta_ehw') * inv(`gamma')
 	matrix rownames `V' = `: rownames e(V)'
 	matrix colnames `V' = `: colnames e(V)'
 
