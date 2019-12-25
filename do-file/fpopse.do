@@ -2,7 +2,9 @@
 capture program drop fpopse
 program define fpopse, eclass
 	syntax varlist(min=2 numeric) [if] [aw], ///
-		control(varlist min=1 numeric fv) rho(numlist min=1 max=1)
+		rho(numlist min=1 max=1) ///
+		[control(varlist numeric fv)] ///
+		[noresidualize]
 		
 	marksample touse
 	
@@ -16,12 +18,17 @@ program define fpopse, eclass
 	
 	// Residualize treatment variables
 	tempname treatvars_resid gamma
-	local `treatvars_resid' ""
-	foreach var of varlist ``treatvars'' {
-		tempvar `var'_resid
-		qui reg `var' `control' [`weight'`exp'] if `touse'
-		qui predict ``var'_resid' if e(sample), residual
-		local `treatvars_resid' ``treatvars_resid'' ``var'_resid'
+	if "`noresidualize'" == "" {
+		local `treatvars_resid' ""
+		foreach var of varlist ``treatvars'' {
+			tempvar `var'_resid
+			qui reg `var' `control' [`weight'`exp'] if `touse'
+			qui predict ``var'_resid' if e(sample), residual
+			local `treatvars_resid' ``treatvars_resid'' ``var'_resid'
+		}
+	}
+	else {
+		local `treatvars_resid' ``treatvars''
 	}
 	qui matrix accum `gamma' = ``treatvars_resid'' if `touse', nocons
 

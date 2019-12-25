@@ -5,13 +5,14 @@ Calculate finite population adjusted SE (Stata program) based on Abadie et. al. 
 ## Main command
 
 ```Stata
-fpopse depvar treatvars [if] [aw], control(varlist) rho(#)
+fpopse depvar treatvars [if] [aw], rho(#) [control(varlist)] [noresidualize]
 ```
 
 - depvar: dependent variable
 - treatvars: treatment variable(s) generating design-based uncertainty
-- control: control variable(s) treated as non-random variables
 - rho: sample-population ratio (in [0, 1])
+- control: control variable(s) treated as non-random variables (If not specified, a constant term is used)
+- noresidualize: specify it if the treatment variables are already residualized
 
 ### Return values
 
