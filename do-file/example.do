@@ -3,6 +3,9 @@ set more off
 set obs 1000
 set seed 1120002
 
+// Run program file
+run "./fpopse.do"
+
 // Generate data
 gen z = rnormal()
 gen y2 = -0.1 * runiformint(-1, 3) + 0.5 * z + rnormal()
